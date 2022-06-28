@@ -1,0 +1,26 @@
+service: csms
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  memorySize: 256
+  timeout: 30
+  region: ap-northeast-2
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - dynamodb:*
+          Resource: "*"
+
+functions:
+  csms:
+    handler: src/csms.handler
+    environment:
+      SES_ACCESSKEY: ${file(./config.js):webConfig.SES_ACCESSKEY}
+      SES_SECRETKEY: ${file(./config.js):webConfig.SES_SECRETKEY}
+    events:
+      - schedule: rate(1 hour)
