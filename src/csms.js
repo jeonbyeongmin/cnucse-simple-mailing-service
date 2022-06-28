@@ -17,7 +17,7 @@ const { SES_ACCESSKEY, SES_SECRETKEY } = process.env;
 const sesAccessKey = SES_ACCESSKEY;
 const sesSecretKey = SES_SECRETKEY;
 
-module.exports.handler = async (event, context, callback) => {
+module.exports.handler = async (event, context) => {
   const newdate = new Date();
   const year = ("0" + newdate.getFullYear()).slice(-2);
   const month = ("0" + (newdate.getMonth() + 1)).slice(-2);
@@ -103,25 +103,19 @@ module.exports.handler = async (event, context, callback) => {
     `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      const response = {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: error.message,
-        }),
-      };
-      callback(null, response);
-    }
-
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: `Email sent successfully!`,
-        data: event,
-      }),
-    };
-
-    callback(null, response);
+  const response = await new Promise((rsv, rjt) => {
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        return rjt(error);
+      }
+      rsv("Email sent");
+    });
   });
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      input: response,
+    }),
+  };
 };
