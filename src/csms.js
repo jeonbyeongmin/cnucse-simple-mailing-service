@@ -22,9 +22,7 @@ module.exports.handler = async (event, context) => {
   const year = ("0" + newdate.getFullYear()).slice(-2);
   const month = ("0" + (newdate.getMonth() + 1)).slice(-2);
   const day = ("0" + newdate.getDate()).slice(-2);
-  const dateString = year + "." + month + "." + day;
-
-  const today = "22.06.28";
+  const today = year + "." + month + "." + day;
   const posts = { notice: [], project: [], bachelor: [] };
 
   await Promise.all(
@@ -37,7 +35,6 @@ module.exports.handler = async (event, context) => {
           const postDate = $(item).find("td:nth-child(5)").text().trim();
 
           if (today === postDate) {
-            const type = category;
             const url = `${baseURL}/${category}.do${$(item)
               .find("td.b-td-left > div > a")
               .attr("href")}`;
