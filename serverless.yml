@@ -23,4 +23,4 @@ functions:
       SES_ACCESSKEY: ${file(./config.js):webConfig.SES_ACCESSKEY}
       SES_SECRETKEY: ${file(./config.js):webConfig.SES_SECRETKEY}
     events:
-      - schedule: cron(10 18 ? * MON-FRI *)
+      - schedule: cron(10 09 ? * MON-FRI *)

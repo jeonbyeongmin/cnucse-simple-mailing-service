@@ -9,6 +9,16 @@ AWS.config.update({
   endpoint: "http://dynamodb.ap-northeast-2.amazonaws.com",
 });
 
+const dynamo = new AWS.DynamoDB.DocumentClient();
+
+async function getEmails() {
+  try {
+    return await dynamo.scan({ TableName: "csms" }).promise();
+  } catch (error) {
+    throw new Error("Failed during getting item", error);
+  }
+}
+
 const baseURL = "https://computer.cnu.ac.kr/computer/notice";
 const category = ["notice", "project", "bachelor"];
 
@@ -46,10 +56,6 @@ module.exports.handler = async (event, context) => {
     })
   );
 
-  // TODO : 임시 메일 사용 -> 이후 이메일 디비 생성후 추가
-  const sendTarget = "qudals7613@gmail.com";
-
-  // smtp 설정
   const transporter = nodemailer.createTransport(
     smtpTransport({
       service: "Gmail",
@@ -62,52 +68,65 @@ module.exports.handler = async (event, context) => {
     })
   );
 
+  const { Items } = await getEmails();
+
+  const listOfRecipients = [];
+
+  for (const element of Items) {
+    listOfRecipients.push(element.email);
+  }
+
+  let response = "";
+
   const mailOptions = {
     from: sesAccessKey,
-    to: sendTarget,
+    to: [],
+    bcc: listOfRecipients,
     subject: `[CNUCSE] ${year}년 ${month}월 ${day}일 공지`,
-    html: `<br/><h1>학사공지</h1>
-    ${
-      posts["bachelor"].length > 0
-        ? posts["bachelor"]
-            .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
-            .join("")
-        : "<h3>공지 없음</h3>"
-    }
-    <br/>
-    <hr/>
-    <br/>
-    <h1>일반소식</h1>
-    ${
-      posts["notice"].length > 0
-        ? posts["notice"]
-            .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
-            .join("")
-        : "<h3>공지 없음</h3>"
-    }
-    <br/>
-    <hr/>
-    <br/>
-    <h1>사업단소식</h1>
-    ${
-      posts["project"].length > 0
-        ? posts["project"]
-            .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
-            .join("")
-        : "<h3>공지 없음</h3>"
-    }
-    <br/>
-    `,
+    html: `
+      ${
+        posts["bachelor"].length > 0
+          ? `<br/><h1>학사공지</h1> ${posts["bachelor"]
+              .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
+              .join("")}
+              <br/>
+              <hr/>`
+          : ""
+      }
+      ${
+        posts["notice"].length > 0
+          ? `<br/><h1>일반소식</h1> ${posts["notice"]
+              .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
+              .join("")}
+              <br/>
+              <hr/>`
+          : ""
+      }
+      ${
+        posts["project"].length > 0
+          ? `<br/><h1>사업단소식</h1> ${posts["project"]
+              .map((item) => `<h3><a href="${item.url}">${item.title}</a></h3>`)
+              .join("")}
+              <br/>`
+          : ""
+      }
+      `,
   };
 
-  const response = await new Promise((rsv, rjt) => {
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        return rjt(error);
-      }
-      rsv("Email sent");
+  if (
+    posts["bachelor"].length !== 0 ||
+    posts["notice"].length !== 0 ||
+    posts["project"].length !== 0
+  ) {
+    response = await new Promise((rsv, rjt) => {
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          return rjt(error);
+        }
+        rsv("Email sent");
+      });
     });
-  });
+  }
 
   return {
     statusCode: 200,
