@@ -1,1 +1,3 @@
 # CSMS client
+
+![](./screenshot.png)
