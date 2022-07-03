@@ -24,3 +24,15 @@ functions:
       SES_SECRETKEY: ${file(./config.js):webConfig.SES_SECRETKEY}
     events:
       - schedule: cron(10 09 ? * MON-FRI *)
+  addEmail:
+    handler: src/addEmail.handler
+    events:
+      - http:
+          path: email
+          method: post
+  removeEmail:
+    handler: src/removeEmail.handler
+    events:
+      - http:
+          path: email
+          method: delete

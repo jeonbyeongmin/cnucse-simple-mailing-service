@@ -9,16 +9,6 @@ AWS.config.update({
   endpoint: "http://dynamodb.ap-northeast-2.amazonaws.com",
 });
 
-const dynamo = new AWS.DynamoDB.DocumentClient();
-
-async function getEmails() {
-  try {
-    return await dynamo.scan({ TableName: "csms" }).promise();
-  } catch (error) {
-    throw new Error("Failed during getting item", error);
-  }
-}
-
 const baseURL = "https://computer.cnu.ac.kr/computer/notice";
 const category = ["notice", "project", "bachelor"];
 
@@ -68,9 +58,7 @@ module.exports.handler = async (event, context) => {
     })
   );
 
-  const { Items } = await getEmails();
-
-  const listOfRecipients = [];
+  const listOfRecipients = await getEmails();
 
   for (const element of Items) {
     listOfRecipients.push(element.email);
