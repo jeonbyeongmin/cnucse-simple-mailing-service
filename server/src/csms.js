@@ -3,6 +3,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const nodemailer = require("nodemailer");
 const smtpTransport = require("nodemailer-smtp-transport");
+const getEmails = require("./common/getEmails");
 
 AWS.config.update({
   region: "ap-northeast-2",
@@ -59,10 +60,6 @@ module.exports.handler = async (event, context) => {
   );
 
   const listOfRecipients = await getEmails();
-
-  for (const element of Items) {
-    listOfRecipients.push(element.email);
-  }
 
   let response = "";
 
